@@ -20,10 +20,18 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf /tmp/jan /tmp/pixelbot
-          git clone https://github.com/janhq/jan.git /tmp/jan
-          git -C /tmp/jan checkout --detach 68b9ceeeb3fd213766c7625f01d3e9b2af9ecb99
-          git clone https://github.com/pixeltable/pixelbot.git /tmp/pixelbot
-          git -C /tmp/pixelbot checkout --detach 28bb68523a9eee072a94ca64fdef02c324a09e21
+          git init /tmp/jan
+          git -C /tmp/jan remote add origin https://github.com/janhq/jan.git
+          git -C /tmp/jan fetch --depth=1 --filter=blob:none origin 68b9ceeeb3fd213766c7625f01d3e9b2af9ecb99
+          git -C /tmp/jan checkout --detach FETCH_HEAD
+          git -C /tmp/jan sparse-checkout init --cone
+          git -C /tmp/jan sparse-checkout set web-app core extensions src-tauri scripts package.json yarn.lock .yarnrc.yml Makefile LICENSE README.md vitest.config.ts .prettierignore .prettierrc
+          git init /tmp/pixelbot
+          git -C /tmp/pixelbot remote add origin https://github.com/pixeltable/pixelbot.git
+          git -C /tmp/pixelbot fetch --depth=1 --filter=blob:none origin 28bb68523a9eee072a94ca64fdef02c324a09e21
+          git -C /tmp/pixelbot checkout --detach FETCH_HEAD
+          git -C /tmp/pixelbot sparse-checkout init --cone
+          git -C /tmp/pixelbot sparse-checkout set backend frontend LICENSE README.md DESIGN.md AGENTS.md .env.example
 
       - name: Assemble NEXORA CODE pack
         shell: bash
