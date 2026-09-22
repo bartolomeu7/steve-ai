@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "intents": {
+    "play_music": {
+      "tool": "play_music",
+      "required_slots": [
+        "query"
+      ],
+      "patterns": [
+        "\\b(toca|tocar|ouve|ouvir|pula|coloca|joga|poe|põe|soca)\\b.*\\b(m[uú]sica|som|beat|track|faixa)\\b",
+        "\\b(toca|tocar|ouve|ouvir|coloca|joga)\\b\\s+.+",
+        "\\bplay\\b",
+        "\\bjoga uma m[uú]sica\\b",
+        "\\bp[oõ]e um som\\b",
+        "\\bsoca o play\\b"
+      ],
+      "ask": "Qual música você quer?"
+    },
+    "stop_music": {
+      "tool": null,
+      "required_slots": [],
+      "patterns": [
+        "\\b(para|pare|pausar|pause|stop)\\b.*\\b(m[uú]sica|som)?\\b",
+        "\\bcal[aá] a boca\\b"
+      ],
+      "ask": null
+    },
+    "volume_up": {
+      "tool": "volume",
+      "required_slots": [],
+      "patterns": [
+        "\\b(aumenta|sobe|mais)\\b.*\\b(volume|talo)?\\b",
+        "\\baumenta o talo\\b"
+      ],
+      "ask": null
+    },
+    "volume_down": {
+      "tool": "volume",
+      "required_slots": [],
+      "patterns": [
+        "\\b(abaixa|diminui|menos)\\b.*\\b(volume|talo)?\\b",
+        "\\babaixa o talo\\b"
+      ],
+      "ask": null
+    }
+  }
+}

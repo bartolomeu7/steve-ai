@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+data/
+logs/
+.venv/
+venv/
+
+# tool-local metadata, not project source
+.serena/
+.claude/
+
+# build artifacts (regenerable from launcher/SteveLauncher.py; see launcher/README.md)
+*.exe
+launcher/dist/
+launcher/build/
+
+# stray/incidental files, not part of the project
+test_all_output.txt
+test_output.txt
+unused.wav

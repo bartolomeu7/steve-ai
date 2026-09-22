@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "artists": {
+    "hungria": {
+      "canonical": "Hungria Hip Hop",
+      "domain": "music",
+      "aliases": [
+        "hungria hip hop",
+        "hungria hip-hop",
+        "o hungria"
+      ]
+    },
+    "tribu da periferia": {
+      "canonical": "Tribo da Periferia",
+      "domain": "music",
+      "aliases": [
+        "tribo da periferia"
+      ]
+    },
+    "mc ryan": {
+      "canonical": "MC Ryan SP",
+      "domain": "music",
+      "aliases": [
+        "mc ryan sp",
+        "ryan sp"
+      ]
+    },
+    "matue": {
+      "canonical": "Matuê",
+      "domain": "music",
+      "aliases": [
+        "matue",
+        "matuê"
+      ]
+    },
+    "orochi": {
+      "canonical": "Orochi",
+      "domain": "music",
+      "aliases": []
+    },
+    "wiu": {
+      "canonical": "Wiu",
+      "domain": "music",
+      "aliases": []
+    },
+    "kayblack": {
+      "canonical": "Kayblack",
+      "domain": "music",
+      "aliases": [
+        "kay black"
+      ]
+    },
+    "l7nnon": {
+      "canonical": "L7NNON",
+      "domain": "music",
+      "aliases": [
+        "l7nnon",
+        "ele7"
+      ]
+    },
+    "djonga": {
+      "canonical": "Djonga",
+      "domain": "music",
+      "aliases": []
+    },
+    "emicida": {
+      "canonical": "Emicida",
+      "domain": "music",
+      "aliases": []
+    },
+    "criolo": {
+      "canonical": "Criolo",
+      "domain": "music",
+      "aliases": []
+    },
+    "racionais": {
+      "canonical": "Racionais MC's",
+      "domain": "music",
+      "aliases": [
+        "racionais mcs",
+        "racionais mc"
+      ]
+    },
+    "anitta": {
+      "canonical": "Anitta",
+      "domain": "music",
+      "aliases": []
+    },
+    "ludmilla": {
+      "canonical": "Ludmilla",
+      "domain": "music",
+      "aliases": [
+        "ludmila"
+      ]
+    },
+    "pedro sampaio": {
+      "canonical": "Pedro Sampaio",
+      "domain": "music",
+      "aliases": []
+    }
+  },
+  "apps": {
+    "zap": {
+      "canonical": "WhatsApp",
+      "aliases": [
+        "whatsapp",
+        "whats",
+        "wpp"
+      ]
+    },
+    "insta": {
+      "canonical": "Instagram",
+      "aliases": [
+        "instagram"
+      ]
+    },
+    "face": {
+      "canonical": "Facebook",
+      "aliases": [
+        "facebook"
+      ]
+    }
+  }
+}
