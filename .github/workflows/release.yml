@@ -1,0 +1,119 @@
+name: Release
+
+# Steve AI is a Windows-only desktop app (pywin32/pycaw/comtypes/winsound
+# throughout) — this workflow only runs on windows-latest, deliberately.
+#
+# Implements the pipeline described in docs/reports/STEVE_UPDATE_CONTRACT.md
+# and docs/reports/STEVE_LAUNCHER_GITHUB_RELEASE_PHASE1.md:
+#   tag push -> checkout -> setup python -> install deps -> pytest ->
+#   package (git-tracked files only) -> validate content -> checksum ->
+#   Ed25519 sign -> GitHub Release with the three assets.
+#
+# If STEVE_UPDATE_PRIVATE_KEY is not configured as a repo secret, the
+# workflow still builds/tests/packages/checksums successfully and uploads
+# those as workflow artifacts, but does NOT sign anything and does NOT
+# create a GitHub Release — it never simulates a production release out of
+# an unsigned or improvised key.
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install runtime + test dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        shell: bash
+        run: python -m pytest
+
+      - name: Verify VERSION matches tag
+        shell: bash
+        run: python scripts/build_release.py verify-tag --tag "${{ github.ref_name }}"
+
+      - name: Build and validate package
+        shell: bash
+        run: python scripts/build_release.py package --tag "${{ github.ref_name }}" --output-dir dist_release
+
+      - name: Compute checksum
+        shell: bash
+        run: python scripts/build_release.py checksum "dist_release/steve-ai-${{ github.ref_name }}.zip"
+
+      - name: Install signing dependency
+        shell: bash
+        run: pip install -r scripts/requirements-release.txt
+
+      - name: Sign package
+        id: sign
+        shell: bash
+        env:
+          STEVE_UPDATE_PRIVATE_KEY: ${{ secrets.STEVE_UPDATE_PRIVATE_KEY }}
+        run: |
+          set +e
+          python scripts/build_release.py sign "dist_release/steve-ai-${{ github.ref_name }}.zip"
+          code=$?
+          set -e
+          if [ "$code" -eq 0 ]; then
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          elif [ "$code" -eq 2 ]; then
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::PIPELINE PREPARADO — ASSINATURA DE PRODUCAO PENDENTE DE SECRET (STEVE_UPDATE_PRIVATE_KEY nao configurado em Settings > Secrets and variables > Actions)"
+          else
+            echo "Signing failed unexpectedly (exit $code) — this is a real failure, not a missing-secret state."
+            exit $code
+          fi
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: steve-ai-${{ github.ref_name }}
+          path: |
+            dist_release/*.zip
+            dist_release/*.sha256
+            dist_release/*.sig
+          if-no-files-found: warn
+
+      - name: Create GitHub Release
+        if: steps.sign.outputs.signed == 'true'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            "dist_release/steve-ai-${{ github.ref_name }}.zip" \
+            "dist_release/steve-ai-${{ github.ref_name }}.zip.sha256" \
+            "dist_release/steve-ai-${{ github.ref_name }}.zip.sig" \
+            --title "Steve AI ${{ github.ref_name }}" \
+            --notes "Pacote automatizado. Contrato de atualização: docs/reports/STEVE_UPDATE_CONTRACT.md. Assinatura Ed25519 e checksum SHA-256 anexados."
+
+      - name: Pipeline summary
+        if: always()
+        shell: bash
+        run: |
+          if [ "${{ steps.sign.outputs.signed }}" == "true" ]; then
+            echo "Release ${{ github.ref_name }} publicada com assets assinados."
+          else
+            echo "PIPELINE PREPARADO — ASSINATURA DE PRODUCAO PENDENTE DE SECRET"
+            echo "Build, testes, empacotamento e checksum concluídos com sucesso."
+            echo "Nenhuma GitHub Release foi criada porque STEVE_UPDATE_PRIVATE_KEY não está configurado."
+            echo "Os artefatos (zip + .sha256) ficam disponíveis como workflow artifact desta execução."
+          fi
