@@ -34,6 +34,19 @@ def window():
         pass
 
 
+@pytest.fixture
+def workspace_window():
+    """The text chat input and the status bar only exist in Workspace mode — the
+    default HUD mode is voice-only by design (see ui/desktop/controls.py::InputBar)."""
+    w = MainWindow(app_status=_status(), voice_available=True, orb_enabled=False, ui_mode="workspace")
+    w.withdraw()
+    yield w
+    try:
+        w.destroy()
+    except Exception:
+        pass
+
+
 def test_window_creates_with_expected_title(window):
     assert window.title() == "Steve"
 
@@ -42,13 +55,25 @@ def test_window_starts_with_no_messages(window):
     assert window.chat_view.message_count == 0
 
 
-def test_apply_status_updates_labels(window):
+def test_apply_status_updates_labels(workspace_window):
+    window = workspace_window
     window.apply_status(_status(model="qwen2.5", ollama_online=False, mic_available=False, voice_available=False, tools_count=3))
 
     assert "qwen2.5" in window.status_bar._labels["model"].cget("text")
     assert "Ollama" in window.status_bar._labels["ollama"].cget("text")
     assert "Offline" in window.connection_label.cget("text")
     assert "Microfone" in window.status_bar._labels["mic"].cget("text")
+
+
+def test_hud_mode_is_the_default(window):
+    assert window._mode == "hud"
+
+
+def test_apply_status_in_hud_mode_updates_corner_labels(window):
+    window.apply_status(_status(model="qwen2.5", mic_available=False))
+
+    assert "qwen2.5" in window._hud_corner_model.cget("text")
+    assert "OFF" in window._hud_corner_mic.cget("text")
 
 
 def test_on_reply_adds_steve_bubble_clears_busy_and_calls_hook(window):
@@ -167,10 +192,21 @@ def test_settings_button_triggers_callback():
         w.destroy()
 
 
-def test_send_via_entry_and_button_end_to_end(window):
+def test_hud_mode_ignores_text_send_because_it_is_voice_only(window):
+    orchestrator = _FakeOrchestrator(reply="Ok.")
+    window.controller = ChatController(_FakeRunner(), orchestrator, voice_service=None)
+
+    window.input_bar.entry.insert(0, "Oi Steve")
+    window.input_bar._handle_send()
+
+    assert orchestrator.received == []
+
+
+def test_send_via_entry_and_button_end_to_end(workspace_window):
     """Programmatically drives the exact path a real click/Enter would: insert text
     into the entry, then invoke the same handler the button's command/Return binding
     calls. Uses a synchronous FakeRunner so no real thread/timer pumping is needed."""
+    window = workspace_window
     orchestrator = _FakeOrchestrator(reply="Oi para você também!")
     controller = ChatController(_FakeRunner(), orchestrator, voice_service=None)
     window.controller = controller

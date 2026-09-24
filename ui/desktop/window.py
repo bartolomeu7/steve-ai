@@ -19,6 +19,7 @@ from ui.desktop.orb.orb import Orb
 from ui.desktop.orb.states import STATE_LABELS, OrbState
 from ui.desktop.project_panel import ProjectPanel
 from ui.desktop.status_bar import StatusBar
+from settings.single_instance import WINDOW_TITLE
 from ui.desktop.styles import (
     FONT_FAMILY,
     FONT_MONO,
@@ -75,7 +76,7 @@ class MainWindow(ctk.CTk):
             else "light"
         )
         self.palette = palette_for(appearance_mode)
-        self.title("STEVE")
+        self.title(WINDOW_TITLE)
         self.minsize(720, 640)
         self.configure(fg_color=self.palette.bg)
 

@@ -322,6 +322,16 @@ def test_audit_logger_records_finding_created(event_bus, monitor, engine, tmp_pa
     monkeypatch.setattr(audit_logger, "log", _spy_log)
 
     event_bus.publish(PROCESS_LIST_UPDATED, {"snapshot": ProcessSnapshot(timestamp=time.time(), processes=())})
+    # The engine only ever analyzes the LATEST snapshot (engine.py's
+    # _latest_process_snapshot), so publishing the "new process" snapshot before the
+    # analysis thread has consumed this empty baseline lets it coalesce the two: the
+    # new pid then becomes part of the baseline and never produces a finding. Same
+    # synchronization as test_new_process_produces_a_finding_published_on_the_bus.
+    deadline = time.monotonic() + 10.0
+    while time.monotonic() < deadline and not engine._analyzer.baseline_established:
+        time.sleep(0.02)
+    assert engine._analyzer.baseline_established is True
+
     event_bus.publish(
         PROCESS_LIST_UPDATED,
         {
