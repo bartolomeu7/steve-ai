@@ -18,3 +18,9 @@ mss>=9.0
 pywebview>=5.0
 
 openwakeword>=0.6.0
+
+# launcher/updater/ (FASE 2 — update client): PEP 440 version comparison and
+# Ed25519 public-key signature verification. Built from this same .venv (see
+# launcher/README.md), so both are declared here rather than in a separate file.
+packaging>=23
+cryptography>=42

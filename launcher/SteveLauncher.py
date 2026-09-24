@@ -6,8 +6,10 @@ Works when placed in: project root, launcher/, or launcher/dist/.
 """
 from __future__ import annotations
 
+import logging
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -124,6 +126,31 @@ def steve_already_running() -> bool:
         return False
 
 
+def _check_for_update_worker(project_root: Path) -> None:
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+        from launcher.updater import check_for_update
+
+        result = check_for_update(project_root)
+        logging.getLogger("steve.launcher").info(
+            "update check: state=%s message=%s", result.state.value, result.message
+        )
+    except Exception as exc:  # noqa: BLE001 - must never break the launch
+        logging.getLogger("steve.launcher").debug("update check skipped: %s", exc)
+
+
+def check_for_update_best_effort(project_root: Path) -> None:
+    """Fire-and-forget, non-blocking update check (FASE 2): runs on a daemon
+    thread so a slow/hanging network can never delay launch_steve() by even
+    its own timeout — 'blocking with a timeout' is still blocking. Never
+    applies anything by itself, only logs to logs/launcher.log. Steve is
+    local-first: no internet means no update check, never a failed start.
+    See docs/reports/STEVE_PHASE2_SECURE_UPDATE_CLIENT.md for why
+    download/apply is intentionally not auto-triggered from here yet."""
+    thread = threading.Thread(target=_check_for_update_worker, args=(project_root,), daemon=True)
+    thread.start()
+
+
 def main() -> None:
     cli_mode = "--cli" in sys.argv
     project_root = get_project_root()
@@ -155,6 +182,15 @@ def main() -> None:
             "Crie/ative o ambiente virtual do Steve antes de usar o launcher.",
         )
         sys.exit(1)
+
+    log_dir = project_root / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    logging.basicConfig(
+        filename=str(log_dir / "launcher.log"),
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+    check_for_update_best_effort(project_root)
 
     if steve_already_running() and not cli_mode:
         # Bring existing instance forward via the app's own single-instance path:
